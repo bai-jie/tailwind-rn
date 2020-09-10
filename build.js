@@ -84,7 +84,20 @@ const supportedUtilities = [
 	/^pointer-events-/
 ];
 
-const isUtilitySupported = (utility, customColors = []) => {
+/**
+ * @typedef {Object} BuildContext
+ * @property {string[]} [customColors] - Custom colors provided in tailwind.config. Default: []
+ * @property {string[]} [customSpacings] - Custom spacings provided in tailwind.config. Default: []
+ */
+
+/**
+ * @param {BuildContext} [context={}] - context provided in tailwind.config
+ * @return {boolean}
+ */
+const isUtilitySupported = (utility, context = {}) => {
+	const customColors = context.customColors || [];
+	const customSpacings = context.customSpacings || [];
+
 	// Skip utilities with `currentColor` values
 	if (['border-current', 'text-current'].includes(utility)) {
 		return false;
@@ -92,7 +105,17 @@ const isUtilitySupported = (utility, customColors = []) => {
 
 	const allSupportedUtilities = [
 		...supportedUtilities,
-		new RegExp(`^bg-(${customColors.join('|')})`)
+		// ## customColors
+		new RegExp(`^bg-(${customColors.join('|')})`),
+		// ## customSpacings
+		// Padding
+		new RegExp(`^p.?-(${customSpacings.join('|')})`),
+		// Margin
+		new RegExp(`^-?m.?-(${customSpacings.join('|')})`),
+		// Width (supportedUtilities already include min-width, max-width)
+		new RegExp(`^w-(${customSpacings.join('|')})`),
+		// Height/min-height/max-height
+		new RegExp(`^(min-|max-)?h-(${customSpacings.join('|')})`),
 	];
 
 	for (const supportedUtility of allSupportedUtilities) {
@@ -110,9 +133,9 @@ const isUtilitySupported = (utility, customColors = []) => {
 
 /**
  * @param source {String} CSS
- * @param customColors {String[]} Custom colors provided in tailwind.config
+ * @param {BuildContext} [context={}] - context provided in tailwind.config
  */
-module.exports = (source, customColors = []) => {
+module.exports = (source, context = {}) => {
 	const {stylesheet} = css.parse(source);
 
 	// Mapping of Tailwind class names to React Native styles
@@ -123,7 +146,7 @@ module.exports = (source, customColors = []) => {
 			for (const selector of rule.selectors) {
 				const utility = selector.replace(/^\./, '').replace('\\/', '/');
 
-				if (isUtilitySupported(utility, customColors)) {
+				if (isUtilitySupported(utility, context)) {
 					styles[utility] = getStyles(rule);
 				}
 			}

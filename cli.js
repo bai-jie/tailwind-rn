@@ -19,9 +19,14 @@ const source = `
 `;
 
 /**
- * @returns {String[]} A list of provided custom colors
+ * @typedef {import('./build.js').BuildContext}
+ * @return {BuildContext}
  */
-const getCustomColors = () => {
+const getBuildContext = () => {
+	/**
+	 * @type {string[]}
+	 */
+	let customColors = [], customSpacings = [];
 	try {
 		const config = require(path.resolve('tailwind.config'));
 
@@ -31,7 +36,23 @@ const getCustomColors = () => {
 			config.theme.extend &&
 			config.theme.extend.colors
 		) {
-			return Object.keys(config.theme.extend.colors);
+			customColors = Object.keys(config.theme.extend.colors);
+		}
+
+		// customSpacings
+		if (
+			config &&
+			config.theme &&
+			config.theme.extend
+		) {
+			customSpacings = Object.keys(Object.assign(
+				{},
+				config.theme.extend.spacing,
+				config.theme.extend.minHeight,
+				config.theme.extend.maxHeight,
+				config.theme.extend.minWidth,
+				config.theme.extend.maxWidth,
+			));
 		}
 	} catch (error) {
 		if (error.code !== 'MODULE_NOT_FOUND') {
@@ -39,14 +60,13 @@ const getCustomColors = () => {
 		}
 	}
 
-	return [];
+	return { customColors, customSpacings };
 };
 
 postcss([tailwind])
 	.process(source, {from: undefined})
 	.then(({css}) => {
-		const customColors = getCustomColors();
-		const styles = build(css, customColors);
+		const styles = build(css, getBuildContext());
 		fs.writeFileSync('styles.json', JSON.stringify(styles, null, '\t'));
 	})
 	.catch(error => {
