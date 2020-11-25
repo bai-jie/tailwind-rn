@@ -120,7 +120,7 @@ const isUtilitySupported = (utility, context = {}) => {
 		// Width (supportedUtilities already include min-width, max-width)
 		new RegExp(`^w-(${customSpacings.join('|')})`),
 		// Height/min-height/max-height
-		new RegExp(`^(min-|max-)?h-(${customSpacings.join('|')})`),
+		new RegExp(`^(min-|max-)?h-(${customSpacings.join('|')})`)
 	];
 
 	for (const supportedUtility of allSupportedUtilities) {

@@ -18,49 +18,59 @@ const source = `
 @tailwind utilities;
 `;
 
+function getTailwindConfig() {
+	try {
+		return require(path.resolve('tailwind.config'));
+	} catch (error) {
+		if (error.code !== 'MODULE_NOT_FOUND') {
+			throw error;
+		}
+
+		return undefined;
+	}
+}
+
 /**
  * @typedef {import('./build.js').BuildContext}
  * @return {BuildContext}
  */
 const getBuildContext = () => {
+	const config = getTailwindConfig();
+
 	/**
 	 * @type {string[]}
 	 */
-	let customColors = [], customSpacings = [];
-	try {
-		const config = require(path.resolve('tailwind.config'));
+	const customColors = (
+		config &&
+		config.theme &&
+		config.theme.extend &&
+		config.theme.extend.colors
+	) ? (
+			Object.keys(config.theme.extend.colors)
+		) : (
+			[]
+		);
 
-		if (
-			config &&
-			config.theme &&
-			config.theme.extend &&
-			config.theme.extend.colors
-		) {
-			customColors = Object.keys(config.theme.extend.colors);
-		}
+	/**
+	 * @type {string[]}
+	 */
+	const customSpacings = (
+		config &&
+		config.theme &&
+		config.theme.extend
+	) ? (
+			Object.keys({
+				...config.theme.extend.spacing,
+				...config.theme.extend.minHeight,
+				...config.theme.extend.maxHeight,
+				...config.theme.extend.minWidth,
+				...config.theme.extend.maxWidth
+			})
+		) : (
+			[]
+		);
 
-		// customSpacings
-		if (
-			config &&
-			config.theme &&
-			config.theme.extend
-		) {
-			customSpacings = Object.keys(Object.assign(
-				{},
-				config.theme.extend.spacing,
-				config.theme.extend.minHeight,
-				config.theme.extend.maxHeight,
-				config.theme.extend.minWidth,
-				config.theme.extend.maxWidth,
-			));
-		}
-	} catch (error) {
-		if (error.code !== 'MODULE_NOT_FOUND') {
-			throw error;
-		}
-	}
-
-	return { customColors, customSpacings };
+	return {customColors, customSpacings};
 };
 
 postcss([tailwind])
