@@ -7,10 +7,27 @@ const postcss = require('postcss');
 const tailwind = require('tailwindcss');
 const build = require('./build');
 
-meow(`
+const cli = meow(`
 	Usage
 	  $ create-tailwind-rn
-`);
+
+	Options
+		--config  default: tailwind.config.js
+		--outFile default: styles.json
+`, {
+	flags: {
+		config: {
+			type: 'string',
+			default: 'tailwind.config.js'
+		},
+		outFile: {
+			type: 'string',
+			default: 'styles.json'
+		}
+	}
+});
+
+const {config: tailwindConfigFile, outFile} = cli.flags;
 
 const source = `
 @tailwind base;
@@ -20,7 +37,7 @@ const source = `
 
 function getTailwindConfig() {
 	try {
-		return require(path.resolve('tailwind.config'));
+		return require(path.resolve(tailwindConfigFile));
 	} catch (error) {
 		if (error.code !== 'MODULE_NOT_FOUND') {
 			throw error;
@@ -73,11 +90,11 @@ const getBuildContext = () => {
 	return {customColors, customSpacings};
 };
 
-postcss([tailwind])
+postcss([tailwind({config: tailwindConfigFile})])
 	.process(source, {from: undefined})
 	.then(({css}) => {
 		const styles = build(css, getBuildContext());
-		fs.writeFileSync('styles.json', JSON.stringify(styles, null, '\t'));
+		fs.writeFileSync(outFile, JSON.stringify(styles, null, '\t'));
 	})
 	.catch(error => {
 		console.error('> Error occurred while generating styles');
