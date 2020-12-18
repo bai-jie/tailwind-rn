@@ -12,13 +12,12 @@ const cli = meow(`
 	  $ create-tailwind-rn
 
 	Options
-		--config  default: tailwind.config.js
+		--config
 		--outFile default: styles.json
 `, {
 	flags: {
 		config: {
-			type: 'string',
-			default: 'tailwind.config.js'
+			type: 'string'
 		},
 		outFile: {
 			type: 'string',
@@ -37,7 +36,7 @@ const source = `
 
 function getTailwindConfig() {
 	try {
-		return require(path.resolve(tailwindConfigFile));
+		return require(path.resolve(tailwindConfigFile || 'tailwind.config'));
 	} catch (error) {
 		if (error.code !== 'MODULE_NOT_FOUND') {
 			throw error;
